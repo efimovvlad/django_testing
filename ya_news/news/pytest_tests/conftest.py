@@ -42,7 +42,7 @@ def comment(author, news):
         news=news,
         author=author,
         text='Текст комментария'
-        )
+    )
     return comment
 
 
