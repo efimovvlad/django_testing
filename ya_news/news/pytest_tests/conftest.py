@@ -96,7 +96,7 @@ def comments(news, author):
             news=news,
             author=author,
             text=f'Tекст {index}',
-            created=now+timedelta(days=index)
+            created=now + timedelta(days=index)
         )
         # comment.created = now + timedelta(days=index)
         # comment.save()
@@ -107,6 +107,7 @@ def comments(news, author):
         # высокой вероятностью для двух объектов, создаваемых подряд,
         # это время будет одинаковым: программный код работает быстро."
     return news
+
 
 @pytest.fixture
 def urls(news_id):
