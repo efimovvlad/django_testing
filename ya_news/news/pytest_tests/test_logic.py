@@ -16,9 +16,11 @@ def test_anonymous_user_cant_create_comment(client, news, form_data):
 
 
 def test_user_can_create_comment(author_client, news, form_data, author):
+    assert Comment.objects.count() == 0
     url = reverse('news:detail', args=(news.id,))
-    response = author_client.post(url, data=form_data)
-    assertRedirects(response, f'{url}#comments')
+    author_client.post(url, data=form_data)
+    # Вынес редиректы отдельно, но в теории предлагалось проверить
+    # редиректы в этих тестах, когда проходили ya_news на unittest
     comments_count = Comment.objects.count()
     assert comments_count == 1
     comment = Comment.objects.get()
@@ -42,35 +44,33 @@ def test_user_cant_use_bad_words(author_client, news):
 
 
 def test_author_can_delete_comment(author_client, comment, news):
-    url = reverse('news:detail', args=(news.id,))
-    url_to_comments = url + '#comments'
+    assert Comment.objects.count() == 1
     delete_url = reverse('news:delete', args=(comment.id,))
-    response = author_client.delete(delete_url)
-    assertRedirects(response, url_to_comments)
+    author_client.delete(delete_url)
     comments_count = Comment.objects.count()
     assert comments_count == 0
 
 
 def test_user_cant_delete_comment_of_another_user(not_author_client, comment):
+    assert Comment.objects.count() == 1
     delete_url = reverse('news:delete', args=(comment.id,))
-    response = not_author_client.delete(delete_url)
-    assert response.status_code == HTTPStatus.NOT_FOUND
+    not_author_client.delete(delete_url)
+    # Проверить статус также предлагалось в теории
     comments_count = Comment.objects.count()
     assert comments_count == 1
 
 
-def test_author_can_edit_comment(author_client, news, comment, form_data):
-    url = reverse('news:detail', args=(news.id,))
-    url_to_comments = url + '#comments'
+def test_author_can_edit_comment(author_client, comment, form_data):
+    assert comment.text != form_data['text']
     edit_url = reverse('news:edit', args=(comment.id,))
-    response = author_client.post(edit_url, data=form_data)
-    assertRedirects(response, url_to_comments)
+    author_client.post(edit_url, data=form_data)
     comment.refresh_from_db()
     assert comment.text == form_data['text']
 
 
 def test_user_cant_edit_comment_of_another_user(
         not_author_client, comment, form_data):
+    assert comment.text == 'Текст комментария'
     edit_url = reverse('news:edit', args=(comment.id,))
     response = not_author_client.post(edit_url, data=form_data)
     assert response.status_code == HTTPStatus.NOT_FOUND

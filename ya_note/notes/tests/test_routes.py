@@ -19,6 +19,9 @@ class TestRoutes(TestCase):
             author=cls.author
         )
 
+    # Здесь также не понял как объединить.
+    # Тесты написаны аналогично теории.
+    # В каждом тесте проверяются разные пути.
     def test_pages_availability_for_anonymous_user(self):
         urls = (
             'notes:home',

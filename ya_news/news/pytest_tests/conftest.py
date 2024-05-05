@@ -46,6 +46,16 @@ def comment(author, news):
     return comment
 
 
+# Если убрать две нижние фикстуры то нужно будет
+# придумывать другое решение при использовании lazy_fixture.
+# Попробовал обойтись без этих фикстур и вроде бы получается
+# только больше строк кода. В местах где идет цикл урлов,
+# в аргументы подставляется либо None либо передаваемый аргумент.
+# Если попробовать применить к аргументу .id то возникает ошибка.
+# Полагаю можно добавить дополнительный if но в таком случае
+# строк кода станет больше. В теории предлагалось именное
+# такое решение как написано сейчас.
+# Либо может есть вариант решения который я ещё не понял.
 @pytest.fixture
 def news_id(news):
     return (news.id,)
@@ -82,9 +92,28 @@ def all_news():
 def comments(news, author):
     now = timezone.now()
     for index in range(10):
-        comment = Comment.objects.create(
-            news=news, author=author, text=f'Tекст {index}',
+        Comment.objects.create(
+            news=news,
+            author=author,
+            text=f'Tекст {index}',
+            created=now+timedelta(days=index)
         )
-        comment.created = now + timedelta(days=index)
-        comment.save()
+        # comment.created = now + timedelta(days=index)
+        # comment.save()
+        # Могу сразу прописать поле created, но в теории рекомендовали
+        # менять значение после создания комментария:
+        # "Даже если передать в комментарии разные значения поля created,
+        # то в базу всё равно запишутся значения текущего времени. И с
+        # высокой вероятностью для двух объектов, создаваемых подряд,
+        # это время будет одинаковым: программный код работает быстро."
     return news
+
+@pytest.fixture
+def urls(news_id):
+    return (
+        ('news:detail', news_id),
+        ('news:home', None),
+        ('users:login', None),
+        ('users:logout', None),
+        ('users:signup', None),
+    )
