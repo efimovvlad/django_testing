@@ -19,8 +19,6 @@ def test_user_can_create_comment(author_client, news, form_data, author):
     assert Comment.objects.count() == 0
     url = reverse('news:detail', args=(news.id,))
     author_client.post(url, data=form_data)
-    # Вынес редиректы отдельно, но в теории предлагалось проверить
-    # редиректы в этих тестах, когда проходили ya_news на unittest
     comments_count = Comment.objects.count()
     assert comments_count == 1
     comment = Comment.objects.get()
@@ -55,7 +53,6 @@ def test_user_cant_delete_comment_of_another_user(not_author_client, comment):
     assert Comment.objects.count() == 1
     delete_url = reverse('news:delete', args=(comment.id,))
     not_author_client.delete(delete_url)
-    # Проверить статус также предлагалось в теории
     comments_count = Comment.objects.count()
     assert comments_count == 1
 

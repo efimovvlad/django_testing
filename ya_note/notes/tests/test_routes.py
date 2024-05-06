@@ -19,48 +19,39 @@ class TestRoutes(TestCase):
             author=cls.author
         )
 
-    # Здесь также не понял как объединить.
-    # Тесты написаны аналогично теории.
-    # В каждом тесте проверяются разные пути.
-    def test_pages_availability_for_anonymous_user(self):
+    def test_pages_availability(self):
         urls = (
-            'notes:home',
-            'users:login',
-            'users:logout',
-            'users:signup',
+            ('users:login', None),
+            ('users:signup', None),
+            ('notes:home', None),
+            ('notes:list', None),
+            ('notes:add', None),
+            ('notes:success', None),
+            ('notes:detail', (self.note.slug,)),
+            ('notes:edit', (self.note.slug,)),
+            ('notes:delete', (self.note.slug,)),
+            ('users:logout', None),
         )
-        for name in urls:
-            with self.subTest(name=name):
-                url = reverse(name)
-                response = self.client.get(url)
-                self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    def test_pages_availability_for_auth_user(self):
-        self.client.force_login(self.reader)
-        urls = ('notes:list', 'notes:add', 'notes:success')
-        for name in urls:
-            with self.subTest(name=name):
-                url = reverse(name)
-                response = self.client.get(url)
-                self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    def test_pages_availability_for_different_users(self):
         users_statuses = (
+            (self.client, HTTPStatus.FOUND),
             (self.author, HTTPStatus.OK),
             (self.reader, HTTPStatus.NOT_FOUND),
         )
         for user, status in users_statuses:
-            self.client.force_login(user)
-            urls = (
-                ('notes:detail', (self.note.slug,)),
-                ('notes:edit', (self.note.slug,)),
-                ('notes:delete', (self.note.slug,)),
-            )
+            if user != self.client:
+                self.client.force_login(user)
             for name, args in urls:
                 with self.subTest(user=user, name=name):
                     url = reverse(name, args=args)
                     response = self.client.get(url)
-                    self.assertEqual(response.status_code, status)
+                    if name in ('users:login', 'users:logout',
+                                'users:signup', 'users:home'):
+                        self.assertEqual(response.status_code, HTTPStatus.OK)
+                    if name in ('notes:detail', 'notes:edit', 'notes:delete'):
+                        self.assertEqual(response.status_code, status)
+                    if name in ('notes:list', 'notes:add',
+                                'notes:success') and user != self.client:
+                        self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_redirects(self):
         login_url = reverse('users:login')
