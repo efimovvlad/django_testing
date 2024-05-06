@@ -3,7 +3,6 @@ import pytest
 from django.urls import reverse
 from pytest_django.asserts import assertRedirects
 from pytest_lazyfixture import lazy_fixture
-from news.models import Comment
 
 
 @pytest.mark.django_db
@@ -56,8 +55,7 @@ def test_pages_availability(
     ),
 )
 def test_redirect(
-        parametrized_client, urls, client, author_client, form_data, news
-    ):
+        parametrized_client, urls, client, author_client, form_data, news):
     name, args = urls
     url = reverse(name, args=args)
     login_url = reverse('users:login')

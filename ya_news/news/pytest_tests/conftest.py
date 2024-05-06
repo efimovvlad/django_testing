@@ -1,6 +1,5 @@
 import pytest
 from datetime import datetime, timedelta
-from django.utils import timezone
 from django.test.client import Client
 from news.models import News, Comment
 from yanews import settings
