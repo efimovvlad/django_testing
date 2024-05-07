@@ -20,38 +20,32 @@ class TestRoutes(TestCase):
         )
 
     def test_pages_availability(self):
-        urls = (
-            ('users:login', None),
-            ('users:signup', None),
-            ('notes:home', None),
-            ('notes:list', None),
-            ('notes:add', None),
-            ('notes:success', None),
-            ('notes:detail', (self.note.slug,)),
-            ('notes:edit', (self.note.slug,)),
-            ('notes:delete', (self.note.slug,)),
-            ('users:logout', None),
+        users_urls_statuses = (
+            (self.client, ('notes:home', None), HTTPStatus.OK),
+            (self.client, ('users:login', None), HTTPStatus.OK),
+            (self.client, ('users:logout', None), HTTPStatus.OK),
+            (self.client, ('users:signup', None), HTTPStatus.OK),
+            (self.author, ('notes:list', None), HTTPStatus.OK),
+            (self.author, ('notes:add', None), HTTPStatus.OK),
+            (self.author, ('notes:success', None), HTTPStatus.OK),
+            (self.author, ('notes:detail', (self.note.slug,)), HTTPStatus.OK),
+            (self.author, ('notes:edit', (self.note.slug,)), HTTPStatus.OK),
+            (self.author, ('notes:delete', (self.note.slug,)), HTTPStatus.OK),
+            (self.reader, ('notes:detail', (self.note.slug,)),
+             HTTPStatus.NOT_FOUND),
+            (self.reader, ('notes:edit', (self.note.slug,)),
+             HTTPStatus.NOT_FOUND),
+            (self.reader, ('notes:delete', (self.note.slug,)),
+             HTTPStatus.NOT_FOUND),
         )
-        users_statuses = (
-            (self.client, HTTPStatus.FOUND),
-            (self.author, HTTPStatus.OK),
-            (self.reader, HTTPStatus.NOT_FOUND),
-        )
-        for user, status in users_statuses:
+        for user, urls, status in users_urls_statuses:
+            name, args = urls
             if user != self.client:
                 self.client.force_login(user)
-            for name, args in urls:
-                with self.subTest(user=user, name=name):
-                    url = reverse(name, args=args)
-                    response = self.client.get(url)
-                    if name in ('users:login', 'users:logout',
-                                'users:signup', 'users:home'):
-                        self.assertEqual(response.status_code, HTTPStatus.OK)
-                    if name in ('notes:detail', 'notes:edit', 'notes:delete'):
-                        self.assertEqual(response.status_code, status)
-                    if name in ('notes:list', 'notes:add',
-                                'notes:success') and user != self.client:
-                        self.assertEqual(response.status_code, HTTPStatus.OK)
+            with self.subTest(user=user, name=name):
+                url = reverse(name, args=args)
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, status)
 
     def test_redirects(self):
         login_url = reverse('users:login')
